@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Omada — Get More From Customers You Already Have</title>
+<meta name="theme-color" content="#05070D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Omada Deck">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<style>
+  :root { --bg:#05070D; --card:#0F1230; --green:#00FF88; --muted:#9CA3AF; --fs:1.25; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; padding:0; height:100%; background:var(--bg); overscroll-behavior:none; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:#fff; -webkit-font-smoothing:antialiased; }
+  #deck { position:fixed; inset:0; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; display:flex; }
+  .slide { display:block; min-width:100vw; height:100vh; scroll-snap-align:start; overflow-y:auto; flex-shrink:0; }
+  .slide-inner { max-width:390px; margin:0 auto; padding:64px 20px 100px; }
+  .eyebrow { font-size:calc(11px * var(--fs)); font-weight:900; letter-spacing:0.15em; color:var(--green); margin-bottom:10px; text-transform:uppercase; }
+  .headline-xl { font-size:calc(30px * var(--fs)); font-weight:900; line-height:1.08; letter-spacing:-0.02em; margin:0 0 10px; }
+  .sub { font-size:calc(13.5px * var(--fs)); color:var(--muted); line-height:1.5; margin:0; }
+  .badge { display:inline-block; font-size:calc(10px * var(--fs)); font-weight:900; letter-spacing:0.12em; color:var(--green); border:1px solid rgba(0,255,136,0.3); border-radius:999px; padding:5px 12px; margin-bottom:16px; text-transform:uppercase; }
+  .glowcard { margin-top:8px; background:var(--card); border:1px solid rgba(0,255,136,0.3); border-radius:20px; padding:16px; box-shadow:0 0 24px rgba(0,255,136,0.08); }
+  .glowlbl { font-size:calc(11px * var(--fs)); font-weight:900; letter-spacing:0.1em; color:var(--green); margin-bottom:12px; text-transform:uppercase; }
+  .statmini-row { display:flex; gap:10px; margin-bottom:14px; }
+  .statmini { flex:1; text-align:center; }
+  .statmini-num { font-size:calc(20px * var(--fs)); font-weight:900; color:var(--green); }
+  .statmini-lbl { font-size:calc(10px * var(--fs)); color:var(--muted); margin-top:2px; line-height:1.3; }
+  .chart { display:flex; align-items:flex-end; gap:14px; height:90px; margin:14px 0; padding:0 6px; }
+  .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .bar { width:100%; background:var(--green); border-radius:6px 6px 0 0; opacity:0.85; }
+  .bar-lbl { font-size:calc(10px * var(--fs)); color:var(--muted); margin-top:6px; }
+  .summarybox { font-size:calc(12px * var(--fs)); color:#fff; line-height:1.5; background:rgba(0,255,136,0.06); border-radius:12px; padding:10px 12px; margin-top:10px; }
+  .ex-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px; }
+  .phonecard { margin-top:8px; background:var(--card); border:2px solid var(--green); border-radius:22px; padding:14px; box-shadow:0 0 24px rgba(0,255,136,0.15); }
+  .chathead { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .avatar { width:34px; height:34px; border-radius:50%; background:var(--green); color:#000; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:calc(12px * var(--fs)); flex-shrink:0; }
+  .avatar.green { background:var(--green); }
+  .chatname { font-size:calc(13px * var(--fs)); font-weight:800; }
+  .chatstatus { font-size:calc(10px * var(--fs)); color:var(--green); }
+  .chatbox { margin-top:6px; display:flex; flex-direction:column; gap:8px; }
+  .bubble { max-width:82%; padding:10px 14px; border-radius:16px; font-size:calc(12.5px * var(--fs)); line-height:1.35; }
+  .bubble.them { align-self:flex-start; background:rgba(255,255,255,0.06); border-bottom-left-radius:4px; }
+  .bubble.us { align-self:flex-end; background:var(--green); color:#000; font-weight:600; border-bottom-right-radius:4px; }
+  .feed-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid rgba(255,255,255,0.06); }
+  .feed-txt { flex:1; font-size:calc(12px * var(--fs)); color:#fff; }
+  .feed-sub { font-size:calc(10.5px * var(--fs)); color:var(--muted); margin-top:2px; }
+  .feed-time { font-size:calc(10px * var(--fs)); color:var(--green); font-weight:700; white-space:nowrap; }
+  .calendar-confirm { display:flex; align-items:center; gap:10px; margin-top:12px; background:rgba(0,255,136,0.08); border:1px solid rgba(0,255,136,0.35); border-radius:16px; padding:12px 14px; }
+  .cal-icon-box { font-size:calc(18px * var(--fs)); width:32px; height:32px; border-radius:10px; background:rgba(0,255,136,0.15); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .cal-confirm-txt { flex:1; font-size:calc(12.5px * var(--fs)); color:#fff; }
+  .cal-confirm-sub { font-size:calc(11px * var(--fs)); color:var(--green); margin-top:2px; }
+  .cal-confirm-check { width:22px; height:22px; border-radius:50%; background:var(--green); color:#000; display:flex; align-items:center; justify-content:center; font-size:calc(12px * var(--fs)); font-weight:900; flex-shrink:0; }
+  .ov-list { margin-top:8px; display:flex; flex-direction:column; gap:8px; }
+  .ov-row { display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:12px 14px; }
+  .ov-ico { font-size:calc(20px * var(--fs)); width:36px; height:36px; border-radius:50%; background:rgba(0,255,136,0.1); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .ov-name { font-size:calc(13px * var(--fs)); font-weight:800; color:#fff; }
+  .ov-sub { font-size:calc(11px * var(--fs)); color:var(--green); margin-top:1px; }
+  .ov-badge { font-size:calc(8.5px * var(--fs)); font-weight:900; background:var(--green); color:#000; padding:2px 7px; border-radius:999px; letter-spacing:0.05em; vertical-align:middle; }
+  .review-card { background:rgba(255,255,255,0.03); border-radius:14px; padding:12px; margin-top:10px; border-top:1px solid rgba(255,255,255,0.06); }
+  .review-head { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .review-avatar { width:32px; height:32px; border-radius:50%; background:var(--card); border:1px solid rgba(0,255,136,0.3); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:calc(11px * var(--fs)); color:var(--green); }
+  .review-name { font-size:calc(12.5px * var(--fs)); font-weight:800; }
+  .review-stars { font-size:calc(10px * var(--fs)); color:#ffd166; }
+  .review-txt { font-size:calc(12px * var(--fs)); color:#fff; line-height:1.4; margin:4px 0; }
+  .review-time { font-size:calc(10px * var(--fs)); color:var(--muted); }
+  .price-card { background:var(--card); border:1px solid rgba(0,255,136,0.3); border-radius:20px; padding:16px; margin-top:14px; }
+  .price-row { display:flex; justify-content:space-between; font-size:calc(12.5px * var(--fs)); padding:5px 0; color:var(--muted); }
+  .price-row .green { color:var(--green); font-weight:800; }
+  .price-row .strike { text-decoration:line-through; }
+  .cta-outline { display:block; text-align:center; margin-top:10px; padding:13px; border-radius:14px; background:transparent; border:1px solid rgba(0,255,136,0.3); color:#fff; font-weight:700; font-size:calc(12px * var(--fs)); text-decoration:none; }
+  .photonote { margin-top:14px; font-size:calc(11px * var(--fs)); color:var(--muted); font-style:italic; text-align:center; }
+  .price-total { margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08); font-size:calc(13px * var(--fs)); font-weight:800; color:#fff; }
+  .cta { display:block; text-align:center; margin-top:16px; padding:15px; border-radius:14px; background:var(--green); color:#000; font-weight:900; font-size:calc(13px * var(--fs)); text-decoration:none; letter-spacing:0.02em; border:none; width:100%; cursor:pointer; }
+  .cta-sub { text-align:center; font-size:calc(11px * var(--fs)); color:var(--muted); margin-top:10px; }
+  #navbar { position:fixed; bottom:0; left:0; right:0; padding:14px 20px calc(14px + env(safe-area-inset-bottom)); display:flex; justify-content:space-between; align-items:center; background:linear-gradient(to top, rgba(5,7,13,0.95), transparent); z-index:50; }
+  #restartBtn { background:var(--card); border:1px solid rgba(0,255,136,0.3); color:#fff; font-size:calc(12px * var(--fs)); font-weight:800; padding:10px 16px; border-radius:999px; }
+  #counter { font-size:calc(11px * var(--fs)); color:var(--muted); font-weight:700; letter-spacing:0.05em; }
+  #offlineStatus { position:fixed; left:0; right:0; top:0; padding:10px 16px calc(10px + env(safe-area-inset-top)); font-size:calc(11px * var(--fs)); font-weight:700; letter-spacing:0.02em;
+    display:flex; align-items:center; justify-content:center; gap:8px; background:rgba(15,18,48,0.95); border-bottom:1px solid rgba(0,255,136,0.15); color:var(--muted); z-index:60; }
+  #offlineStatus .dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; }
+  #offlineStatus.ready { color:var(--green); }
+  #offlineStatus.ready .dot { background:var(--green); box-shadow:0 0 6px rgba(0,255,136,0.7); }
+  #offlineStatus.hide { display:none; }
+  #fontCtrl { position:fixed; top:calc(14px + env(safe-area-inset-top)); right:14px; z-index:60; display:flex; align-items:center; gap:2px; background:rgba(15,18,48,0.92); border:1px solid rgba(0,255,136,0.3); border-radius:999px; padding:4px; }
+  #fontCtrl button { width:34px; height:34px; border-radius:50%; border:none; background:transparent; color:#fff; font-weight:900; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .bubble.sys { align-self:center; background:none; color:var(--muted); font-size:calc(9.5px * var(--fs)); text-transform:uppercase; letter-spacing:0.06em; padding:4px 0; font-weight:800; }
+  #fontCtrl button:active { background:rgba(0,255,136,0.2); }
+  #fontCtrl .reset { font-size:10px; color:var(--green); width:auto; padding:0 8px; letter-spacing:0.05em; }
+</style>
+</head>
+<body>
+
+<div id="fontCtrl">
+  <button id="fontDown">A−</button>
+  <button id="fontReset" class="reset">RESET</button>
+  <button id="fontUp">A+</button>
+</div>
+
+<div id="offlineStatus" class="hide">
+  <span class="dot"></span>
+  <span id="offlineStatusText">Checking offline cache…</span>
+</div>
+
+<div id="deck">
+
+<!-- SLIDE 0: COVER -->
+<div class="slide"><div class="slide-inner">
+  <div class="eyebrow">LOCAL TERRITORY PARTNER · AL DODD</div>
+  <h2 class="headline-xl">YOU EARNED THEM. KEEP THEM.</h2>
+  <div class="glowcard">
+    <div class="glowlbl">OMADA HELPS YOU KEEP THEM</div>
+    <p class="sub" style="color:#fff;margin-bottom:14px">Omada helps you keep, reconnect with, and do more business from the customers you've already worked hard to earn.</p>
+    <div class="statmini-row">
+      <div class="statmini"><div class="statmini-num">1,000s</div><div class="statmini-lbl">businesses growing</div></div>
+      <div class="statmini"><div class="statmini-num">$0</div><div class="statmini-lbl">ad spend required</div></div>
+      <div class="statmini"><div class="statmini-num">4.8★</div><div class="statmini-lbl">owner rating</div></div>
+    </div>
+  </div>
+  <div class="badge" style="margin-top:16px">✓ OMADA LEVELS THE PLAYING FIELD</div>
+</div></div>
+
+<!-- SLIDE 1: MEET ALPHA -->
+<div class="slide"><div class="slide-inner">
+  <div class="eyebrow">MEET ALPHA</div>
+  <h2 class="headline-xl">SIMPLY TALK TO ALPHA AND IT'S DONE</h2>
+  <div class="phonecard">
+    <div class="chathead"><div class="avatar">A</div><div><div class="chatname">Alpha AI</div><div class="chatstatus">● Online now</div></div></div>
+    <div class="chatbox">
+      <div class="bubble them">We're slow tomorrow, can we push something quick?</div>
+      <div class="bubble us">On it — out same-day. Fills the gap between your planned campaigns.</div>
+    </div>
+    <div class="calendar-confirm">
+      <div class="cal-icon-box">💬</div>
+      <div class="cal-confirm-txt"><b>Alpha is your single point of contact</b><div class="cal-confirm-sub">Coordinates everything, so you don't have to</div></div>
+      <div class="cal-confirm-check">✓</div>
+    </div>
+  </div>
+</div></div>
+
+<!-- SLIDE 2: TEAM OVERVIEW -->
+<div class="slide"><div class="slide-inner">
+  <div class="eyebrow">YOUR FULL TEAM</div>
+  <h2 class="headline-xl">ALPHA + 8 SPECIALISTS</h2>
+  <div class="glowcard">
+    <div class="ov-list" style="margin-top:0">
+      <div class="ov-row"><div class="ov-ico">🔍</div><div class="ov-txt"><div class="ov-name">Business Analyst</div><div class="ov-sub">competitive &amp; market intelligence</div></div></div>
+      <div class="ov-row"><div class="ov-ico">🎯</div><div class="ov-txt"><div class="ov-name">Campaign Strategist</div><div class="ov-sub">campaigns built around your business</div></div></div>
+      <div class="ov-row"><div class="ov-ico">📱</div><div class="ov-txt"><div class="ov-name">Social Media Manager</div><div class="ov-sub">posts every day</div></div></div>
+      <div class="ov-row"><div class="ov-ico">🎨</div><div class="ov-txt"><div class="ov-name">Graphics Designer</div><div class="ov-sub">on-brand visuals</div></div></div>
+      <div class="ov-row"><div class="ov-ico">🎬</div><div class="ov-txt"><div class="ov-name">Video Producer</div><div class="ov-sub">short videos from real photos</div></div></div>
+      <div class="ov-row"><div class="ov-ico">📍</div><div class="ov-txt"><div class="ov-name">Local Presence Manager <span class="ov-badge">NEW</span></div><div class="ov-sub">Google profile optimization</div></div></div>
+      <div class="ov-row"><div class="ov-ico">💬</div><div class="ov-txt"><div class="ov-name">Website Chat Agent</div><div class="ov-sub">24/7 lead capture, books to calendar</div></div></div>
+      <div class="ov-row"><div class="ov-ico">📲</div><div class="ov-txt"><div class="ov-name">SMS Outreach Specialist <span class="ov-badge">LIVE NOW</span></div><div class="ov-sub">brings repeat customers back</div></div></div>
+    </div>
+  </div>
+  <div class="badge" style="margin-top:16px">✓ ZERO ADDED WORKLOAD</div>
+</div></div>
+
+<!-- SLIDE 3: QUESTION 1 -->
+<div class="slide"><div class="slide-inner">
+  <div class="eyebrow">OMADA CAPTURES</div>
+  <h2 class="headline-xl">DID "I'LL BE BACK" MEAN GOODBYE?</h2>
+  <div class="phonecard">
+    <div class="chathead"><div class="avatar">MV</div><div><div class="chatname">Maple &amp; Vine Salon</div><div class="chatstatus">● SMS · automated re-engagement series</div></div></div>
+    <div class="chatbox">
+      <div class="bubble sys">30 days since last visit</div>
+      <div class="bubble us">Miss you at Maple &amp; Vine! Your usual spot's open this week whenever you're ready.</div>
+      <div class="bubble sys">60 days since last visit</div>
+      <div class="bubble us">Still holding your seat — book before Friday and get 15% off your next visit.</div>
+      <div class="bubble them">omg yes let's do Saturday!</div>
+    </div>
+    <div class="calendar-confirm">
+      <div class="cal-icon-box">📅</div>
+      <div class="cal-confirm-txt"><b>Booked automatically</b><div class="cal-confirm-sub">Omada Stops Customers From Slipping Away</div></div>
+      <div class="cal-confirm-check">✓</div>
+    </div>
+  </div>
+  <div class="badge" style="margin-top:16px">✓ HANDLED AUTOMATICALLY</div>
+</div></div>
+
+<!-- SLIDE 4: QUESTION 2 -->
+<div class="slide"><div class="slide-inner">
+  <div class="eyebrow">OMADA RESPONDS</div>
+  <h2 class="headline-xl">DID A MISSED CALL COST YOU?</h2>
+  <div class="phonecard">
+    <div class="chathead"><div class="avatar green">💬</div><div><div class="chatname">Text Message</div><div class="chatstatus">● 9:40 PM · answered in seconds</div></div></div>
+    <div class="chatbox">
+      <div class="bubble them">hey do y'all have any openings tmrw for a fade?</div>
+      <div class="bubble us">We do! 10:30am or 1:00pm — want me to grab one for you?</div>
+      <div class="bubble them">1pm works</div>
+      <div class="bubble us">You're booked for 1:00pm tomorrow. See you then!</div>
+    </div>
+    <div class="calendar-confirm">
+      <div class="cal-icon-box">📅</div>
+      <div class="cal-confirm-txt"><b>9:40 PM Call — Auto-Added to Calendar</b><div class="cal-confirm-sub">Tomorrow, 1:00 PM</div></div>
+      <div class="cal-confirm-check">✓</div>
+    </div>
+  </div>
+  <div class="badge" style="margin-top:16px">✓ NOTHING WAITS FOR A CALLBACK</div>
+</div></div>
+
+<!-- SLIDE 5: QUESTION 3 -->
+<div class="slide"><div class="slide-inner">
+  <div class="eyebrow">OMADA RECONNECTS</div>
+  <h2 class="headline-xl">DID A LOYAL CUSTOMER FADE AWAY?</h2>
+  <div class="phonecard">
+    <div class="chathead"><div class="avatar">RB</div><div><div class="chatname">Rustic Barbershop</div><div class="chatstatus">● SMS · pattern break detected</div></div></div>
+    <div class="chatbox">
+      <div class="bubble sys">Usually visits every 3 weeks · now 6 weeks quiet</div>
+      <div class="bubble us">Hey Marcus, it's been a bit longer than usual — want your regular Tuesday slot back on the books?</div>
+      <div class="bubble them">yeah my bad, been busy. Tuesday works</div>
+    </div>
+    <div class="calendar-confirm">
+      <div class="cal-icon-box">📅</div>
+      <div class="cal-confirm-txt"><b>Booked automatically</b><div class="cal-confirm-sub">Flagged the moment the pattern broke — no one had to notice</div></div>
+      <div class="cal-confirm-check">✓</div>
+    </div>
+  </div>
+  <div class="badge" style="margin-top:16px">✓ HANDLED AUTOMATICALLY</div>
+</div></div>
+
+<!-- SLIDE 6: QUESTION 4 -->
+<div class="slide"><div class="slide-inner">
+  <div class="eyebrow">OMADA STAYS AHEAD</div>
+  <h2 class="headline-xl">SEE IT BEFORE IT COSTS YOU</h2>
+  <div class="phonecard">
+    <div class="chathead"><div class="avatar">A</div><div><div class="chatname">Alpha AI</div><div class="chatstatus">● Proactive alert</div></div></div>
+    <div class="chatbox">
+      <div class="bubble us">Heads up — Bloom Studio just launched a referral discount 0.6 mi from you. Want me to queue a matching promo?</div>
+      <div class="bubble them">yes, send something similar</div>
+      <div class="bubble us">On it — drafted and scheduled for tomorrow morning.</div>
+    </div>
+    <div class="calendar-confirm">
+      <div class="cal-icon-box">🎯</div>
+      <div class="cal-confirm-txt"><b>Alpha Tracks Competitors</b><div class="cal-confirm-sub">So you know what's happening before it matters</div></div>
+      <div class="cal-confirm-check">✓</div>
+    </div>
+  </div>
+  <div class="badge" style="margin-top:16px">✓ SURFACED BEFORE IT COST YOU</div>
+</div></div>
+
+<!-- SLIDE 7: WEBSITE CHAT -->
+<div class="slide"><div class="slide-inner">
+  <div class="eyebrow">WEBSITE CHAT AGENT · 11:52 PM</div>
+  <h2 class="headline-xl">BOOKS DIRECTLY TO YOUR CALENDAR 24/7</h2>
+  <div class="phonecard">
+    <div class="chathead"><div class="avatar green">💬</div><div><div class="chatname">Chat with Agent</div><div class="chatstatus">● Online now</div></div></div>
+    <div class="chatbox">
+      <div class="bubble them">Do you have anything open this Saturday for a color touch-up?</div>
+      <div class="bubble us">We do! 2:00pm with Dana — want me to grab it for you?</div>
+      <div class="bubble them">2pm please!</div>
+      <div class="bubble us">Booked — confirmation sent to your phone.</div>
+    </div>
+    <div class="calendar-confirm">
+      <div class="cal-icon-box">📅</div>
+      <div class="cal-confirm-txt"><b>Auto-added to calendar</b><div class="cal-confirm-sub">Saturday, 2:00 PM · Color touch-up</div></div>
+      <div class="cal-confirm-check">✓</div>
+    </div>
+  </div>
+  <div class="badge" style="margin-top:16px">✓ NOTHING SLIPS THROUGH</div>
+</div></div>
+
+<!-- SLIDE 10: LOCAL PRESENCE -->
+<div class="slide"><div class="slide-inner">
+  <div class="eyebrow">LOCAL PRESENCE MANAGER</div>
+  <h2 class="headline-xl">WORKS ALONGSIDE YOUR TEAM</h2>
+  <div class="phonecard">
+    <div class="chathead"><div class="avatar">A</div><div><div class="chatname">Alpha AI</div><div class="chatstatus">● Monday update · unprompted</div></div></div>
+    <div class="chatbox">
+      <div class="bubble us">Quick update — your Google profile picked up more views this week, posted 3 times, and your description now matches how people are actually searching for you. Nothing needed from you.</div>
+      <div class="bubble them">appreciate it</div>
+    </div>
+    <div class="calendar-confirm">
+      <div class="cal-icon-box">📍</div>
+      <div class="cal-confirm-txt"><b>Keeps your Google profile sharp, every day</b><div class="cal-confirm-sub">Runs quietly in the background, alongside whatever else you have running</div></div>
+      <div class="cal-confirm-check">✓</div>
+    </div>
+  </div>
+  <div class="badge" style="margin-top:16px">✓ REPORTS SENT — YOU NEVER HAVE TO ASK</div>
+</div></div>
+
+<!-- SLIDE 11: REVIEW OUTREACH -->
+<div class="slide"><div class="slide-inner">
+  <div class="eyebrow">REVIEW OUTREACH · RUNS THROUGH SMS &amp; ALPHA</div>
+  <h2 class="headline-xl">TURN HAPPY CUSTOMERS INTO REVIEWS.</h2>
+  <div class="phonecard">
+    <div class="chathead"><div class="avatar">MV</div><div><div class="chatname">Maple &amp; Vine Salon</div><div class="chatstatus">● Every customer gets a check-in</div></div></div>
+    <div class="chatbox">
+      <div class="bubble sys">Priya · 1 day after visit</div>
+      <div class="bubble us">Hi Priya! How was your visit yesterday?</div>
+      <div class="bubble them">It was amazing, loved the new color!</div>
+      <div class="bubble us">So glad! Mind leaving a quick Google review? 🙏 [link]</div>
+      <div class="bubble them">Of course, done!</div>
+      <div class="bubble sys">Marcus · 1 day after visit</div>
+      <div class="bubble them">Honestly, the wait was longer than I expected.</div>
+      <div class="bubble us">Thanks for telling us — I'll make sure the owner sees this directly.</div>
+      <div class="bubble sys">No review link sent</div>
+    </div>
+    <div class="review-card">
+      <div class="review-head"><div class="review-avatar">P</div><div><div class="review-name">Priya</div><div class="review-stars">★★★★★</div></div></div>
+      <div class="review-txt">"Loved the new color, everyone was so friendly!"</div>
+      <div class="review-time">Posted automatically · profile strengthened</div>
+    </div>
+  </div>
+  <div class="badge" style="margin-top:16px">✓ ONLY HAPPY CUSTOMERS ARE ASKED</div>
+</div></div>
+
+<!-- SLIDE 12: PRICING / CTA -->
+<div class="slide"><div class="slide-inner">
+  <h2 class="headline-xl">PAY FOR 3, GET 1 FREE</h2>
+  <p class="sub" style="margin-bottom:14px">$621 for 4 months · $155.25/mo effective · Save $1,167/yr</p>
+  <div class="price-card">
+    <div class="price-row"><span>Retail Price</span><span class="strike">$299/mo</span></div>
+    <div class="price-row"><span>Quarterly Discount</span><span>$275/mo · &minus;$24</span></div>
+    <div class="price-row"><span>Territory Partner Discount (16.3%)</span><span>$230/mo · &minus;$45</span></div>
+    <div class="price-row"><span>Early Bird Discount (10%)</span><span class="green">$207/mo · &minus;$23</span></div>
+    <div class="price-total">$207 × 3 months = $621 · +1 month free = 4 months for $621</div>
+    <div class="price-total" style="margin-top:4px">Effective monthly cost: $155.25/mo ($621 ÷ 4)</div>
+  </div>
+  <div class="price-card" style="margin-top:10px">
+    <div class="price-row"><span>Retail for 12 months</span><span class="strike">$299 × 12 = $3,588</span></div>
+    <div class="price-row"><span>First 4 months</span><span>$155.25 × 4 = $621</span></div>
+    <div class="price-row"><span>Next 8 months</span><span>$225 × 8 = $1,800</span></div>
+    <div class="price-total">Total year 1: $2,421 · <span class="green">Your annual savings: $1,167</span></div>
+  </div>
+  <a class="cta" href="https://app.omada.ai/account-setup" target="_blank" rel="noopener noreferrer">Start 7-Day Free Trial →</a>
+  <a class="cta-outline" href="Omada-Pricing-Breakdown.pdf" target="_blank">View Full Pricing PDF →</a>
+  <a class="cta-outline" href="https://grader.omada.ai/batch" target="_blank" rel="noopener noreferrer">Grade My Business Now</a>
+  <p class="photonote">Links need internet to open — deck itself works fully offline</p>
+</div></div>
+
+</div>
+
+<div id="navbar"><button id="restartBtn">↺ Restart</button><div id="counter"></div></div>
+
+<script>
+var deck = document.getElementById('deck');
+var total = document.querySelectorAll('.slide').length;
+function updateCounter(){
+  var idx = Math.round(deck.scrollLeft / window.innerWidth) + 1;
+  document.getElementById('counter').textContent = idx + ' / ' + total;
+}
+deck.addEventListener('scroll', function(){ window.requestAnimationFrame(updateCounter); }, {passive:true});
+document.getElementById('restartBtn').addEventListener('click', function(){
+  deck.scrollTo({left:0, behavior:'smooth'});
+});
+updateCounter();
+
+(function () {
+  var root = document.documentElement;
+  var current = 1.25;
+  var MIN = 0.85, MAX = 1.9, STEP = 0.1, DEFAULT = 1.25;
+
+  function apply() {
+    root.style.setProperty('--fs', current.toFixed(2));
+  }
+  document.getElementById('fontUp').addEventListener('click', function () {
+    current = Math.min(MAX, +(current + STEP).toFixed(2));
+    apply();
+  });
+  document.getElementById('fontDown').addEventListener('click', function () {
+    current = Math.max(MIN, +(current - STEP).toFixed(2));
+    apply();
+  });
+  document.getElementById('fontReset').addEventListener('click', function () {
+    current = DEFAULT;
+    apply();
+  });
+})();
+
+(function () {
+  var statusEl = document.getElementById('offlineStatus');
+  var textEl = document.getElementById('offlineStatusText');
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(function (reg) {
+          statusEl.classList.remove('hide');
+          textEl.textContent = 'Saving for offline…';
+          navigator.serviceWorker.ready.then(function () {
+            statusEl.classList.add('ready');
+            textEl.textContent = 'Ready to present offline';
+            setTimeout(function () { statusEl.classList.add('hide'); }, 3000);
+          });
+        })
+        .catch(function (err) {
+          console.warn('Omada deck: service worker failed', err);
+        });
+    });
+  }
+})();
+</script>
+</body>
+</html>
